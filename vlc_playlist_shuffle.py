@@ -109,6 +109,7 @@ if not output_name:
 else:
     output_name = output_name[0]
 
+print("Writing . . .")
 count = 0
 with open(output_name, 'wt') as fp:
     for path in result:
