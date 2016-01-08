@@ -27,19 +27,50 @@ def jank_parse(file_name, result):
             line = fp.readline()
 
 
-def get_ctime(vlc_path):
+def norm_path(vlc_path):
     path = vlc_path.replace('file:///', '')
     path = path.replace('/', '\\')
     path = unquote(path)
+    return path
+
+
+def get_score(vlc_path):
+    """
+    Returns a score for how desirable the media file is to play based only
+    on how recently it has been played since its creation.
+
+    A higher score means it will appear sooner on the playlist.
+    """
+    path = norm_path(vlc_path)
+    ctime = 0
+    atime = 0
+    now = time.time()
     try:
         ctime = os.stat(path).st_ctime
+        atime = os.stat(path).st_atime
     except Exception as e:
         print(repr(e))
-    return os.stat(path).st_ctime
+        return -1
+
+    return ctime + now - atime
+
+
+def update_atime(vlc_path):
+    """
+    You should enable lastaccesstime on your system.
+    If you do not want to enable it or can't, you can use this function
+    to update it manually.
+    """
+    path = vlc_path.replace('file:///', '')
+    path = path.replace('/', '\\')
+    path = unquote(path)
+    now = int(time.time())
+    mtime = os.stat(path).st_mtime
+    os.utime(path, now, mtime)
 
 
 def sort_by_ctime(items):
-    items.sort(key=get_ctime, reverse=True)
+    items.sort(key=get_score, reverse=True)
 
 
 def main(playlists):
